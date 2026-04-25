@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Royal Drive Car Rental</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body{font-family:Arial;background:#f5f7fa}
+.page{display:none}
+.active{display:block}
+.hero{
+background:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.6)),
+url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7');
+height:90vh;background-size:cover;background-position:center;
+display:flex;align-items:center;justify-content:center;
+color:#fff;text-align:center}
+.card{border:none;border-radius:18px;box-shadow:0 10px 25px rgba(0,0,0,.12)}
+.car-img{height:220px;object-fit:cover;border-radius:14px}
+.nav-link{cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+<div class="container">
+<a class="navbar-brand fw-bold">🚗 Royal Drive</a>
+<button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#menu"><span class="navbar-toggler-icon"></span></button>
+<div class="collapse navbar-collapse" id="menu">
+<ul class="navbar-nav ms-auto">
+<li class="nav-item"><span class="nav-link" onclick="showPage('home')">Home</span></li>
+<li class="nav-item"><span class="nav-link" onclick="showPage('cars')">Cars</span></li>
+<li class="nav-item"><button class="btn btn-warning btn-sm ms-2" onclick="adminLogin()">Admin</button></li>
+</ul>
+</div>
+</div>
+</nav>
+
+<!-- HOME -->
+<section id="home" class="page active">
+<div class="hero">
+<div>
+<h1 class="display-4 fw-bold">Luxury Cars on Rent</h1>
+<p class="lead">Drive Premium • Book Easy • Ride Royal</p>
+<button class="btn btn-warning btn-lg" onclick="showPage('cars')">Explore Cars</button>
+</div>
+</div>
+</section>
+
+<!-- CARS -->
+<section id="cars" class="page container py-5">
+<h2 class="text-center mb-4">Available Cars</h2>
+
+<div class="row mb-3">
+<div class="col-md-12">
+<input class="form-control" placeholder="Search Car..." onkeyup="searchCars(this.value)">
+</div>
+</div>
+
+<div class="row" id="carBox"></div>
+</section>
+
+<!-- BOOKING -->
+<section id="booking" class="page container py-5">
+<div class="row justify-content-center">
+<div class="col-md-7">
+<div class="card p-4">
+<h2 class="mb-3">Book Your Car</h2>
+
+<input class="form-control mb-2" id="custName" placeholder="Full Name">
+<input class="form-control mb-2" id="custPhone" placeholder="Phone">
+<input class="form-control mb-2" id="custEmail" placeholder="Email">
+<input class="form-control mb-2" id="pickup" placeholder="Pickup Address">
+<input class="form-control mb-2" id="drop" placeholder="Drop Address">
+<input class="form-control mb-2" id="bookDate" type="date">
+<input class="form-control mb-2" id="days" type="number" placeholder="Days" onkeyup="calcTotal()">
+<input class="form-control mb-2" id="idproof" placeholder="ID Proof Number">
+<input class="form-control mb-2" id="carName" readonly>
+<input class="form-control mb-2" id="rate" readonly>
+
+<select class="form-control mb-2" id="payMode">
+<option>UPI</option>
+<option>Card</option>
+<option>Cash</option>
+</select>
+
+<input class="form-control mb-2" id="totalAmount" readonly placeholder="Total Charges">
+
+<button class="btn btn-dark w-100" onclick="confirmBooking()">Confirm Booking</button>
+
+</div>
+</div>
+</div>
+</section>
+
+<!-- ADMIN -->
+<section id="admin" class="page container py-5">
+<h2 class="mb-4">👑 Admin Dashboard</h2>
+
+<div class="row mb-4">
+<div class="col-md-4"><div class="card p-3"><h5>Total Cars</h5><h2 id="carCount"></h2></div></div>
+<div class="col-md-4"><div class="card p-3"><h5>Total Bookings</h5><h2 id="bookCount"></h2></div></div>
+<div class="col-md-4"><div class="card p-3"><h5>Total Revenue</h5><h2 id="revenue"></h2></div></div>
+</div>
+
+<div class="card p-4 mb-4">
+<h4>Add New Car</h4>
+<input class="form-control mb-2" id="newCar" placeholder="Car Name">
+<input class="form-control mb-2" id="newRate" placeholder="Rate Per Day">
+<input class="form-control mb-2" id="newImg" placeholder="Image URL">
+<button class="btn btn-success w-100" onclick="addCar()">Add Car</button>
+</div>
+
+<div class="card p-4">
+<h4>All Bookings</h4>
+<div id="bookingList"></div>
+</div>
+</section>
+
+<script>
+let cars=JSON.parse(localStorage.getItem("cars"))||[
+{name:"BMW X5",rate:5000,img:"https://images.unsplash.com/photo-1555215695-3004980ad54e"},
+{name:"Audi A6",rate:4500,img:"https://images.unsplash.com/photo-1503376780353-7e6692767b70"},
+{name:"Mercedes C",rate:5500,img:"https://images.unsplash.com/photo-1494976388531-d1058494cdd8"},
+{name:"Fortuner",rate:4000,img:"https://images.unsplash.com/photo-1549399542-7e3f8b79c341"},
+{name:"Thar",rate:3500,img:"https://images.unsplash.com/photo-1519641471654-76ce0107ad1b"},
+{name:"Creta",rate:3000,img:"https://images.unsplash.com/photo-1553440569-bcc63803a83d"},
+{name:"Swift",rate:2000,img:"https://images.unsplash.com/photo-1605559424843-9e4c228bf1c9"},
+{name:"Scorpio",rate:3200,img:"https://images.unsplash.com/photo-1493238792000-8113da705763"},
+{name:"Innova",rate:3800,img:"https://images.unsplash.com/photo-1549924231-f129b911e442"},
+{name:"Range Rover",rate:7000,img:"https://images.unsplash.com/photo-1502877338535-766e1452684a"}
+];
+
+let bookings=JSON.parse(localStorage.getItem("bookings"))||[];
+
+function save(){
+localStorage.setItem("cars",JSON.stringify(cars));
+localStorage.setItem("bookings",JSON.stringify(bookings));
+}
+
+function showPage(id){
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+if(id=="cars")renderCars(cars);
+if(id=="admin")loadAdmin();
+}
+
+function renderCars(arr){
+let html="";
+arr.forEach((c,i)=>{
+html+=`
+<div class="col-md-4 mb-4">
+<div class="card p-3">
+<img src="${c.img}" class="car-img mb-3">
+<h4>${c.name}</h4>
+<h5 class="text-success">₹${c.rate}/day</h5>
+<button class="btn btn-primary w-100" onclick="bookCar(${i})">Book Now</button>
+</div>
+</div>`;
+});
+carBox.innerHTML=html;
+}
+
+function searchCars(v){
+let f=cars.filter(c=>c.name.toLowerCase().includes(v.toLowerCase()));
+renderCars(f);
+}
+
+function bookCar(i){
+carName.value=cars[i].name;
+rate.value=cars[i].rate;
+showPage("booking");
+}
+
+function calcTotal(){
+totalAmount.value=days.value * rate.value;
+}
+
+function confirmBooking(){
+let obj={
+name:custName.value,
+phone:custPhone.value,
+email:custEmail.value,
+pickup:pickup.value,
+drop:drop.value,
+date:bookDate.value,
+days:days.value,
+idproof:idproof.value,
+car:carName.value,
+rate:rate.value,
+payment:payMode.value,
+total:totalAmount.value
+};
+bookings.push(obj);
+save();
+downloadInvoice(obj);
+alert("Booking Confirmed");
+showPage("cars");
+}
+
+function downloadInvoice(b){
+let txt=`ROYAL DRIVE INVOICE
+
+Name: ${b.name}
+Phone: ${b.phone}
+Email: ${b.email}
+
+Car: ${b.car}
+Pickup: ${b.pickup}
+Drop: ${b.drop}
+Date: ${b.date}
+Days: ${b.days}
+
+Payment: ${b.payment}
+Total Charges: ₹${b.total}
+
+Status: Confirmed`;
+let blob=new Blob([txt],{type:"text/plain"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="invoice.txt";
+a.click();
+}
+
+function adminLogin(){
+let id=prompt("Admin ID");
+let pass=prompt("Password");
+if(id=="mahi@123" && pass=="Mahi2123#"){showPage("admin")}
+else alert("Wrong Admin Login");
+}
+
+function loadAdmin(){
+carCount.innerText=cars.length;
+bookCount.innerText=bookings.length;
+let rev=0;
+bookings.forEach(b=>rev+=Number(b.total));
+revenue.innerText="₹"+rev;
+
+bookingList.innerHTML=bookings.map((b,i)=>`
+<div class="border p-2 mb-2">
+<b>${b.name}</b> booked <b>${b.car}</b><br>
+📍 ${b.pickup} to ${b.drop}<br>
+📅 ${b.date} | ${b.days} days<br>
+💳 ${b.payment} | ₹${b.total}
+</div>
+`).join("");
+}
+
+function addCar(){
+cars.push({
+name:newCar.value,
+rate:newRate.value,
+img:newImg.value
+});
+save();
+loadAdmin();
+alert("Car Added");
+}
+
+renderCars(cars);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
